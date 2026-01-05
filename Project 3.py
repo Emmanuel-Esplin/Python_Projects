@@ -1,9 +1,5 @@
-"""Analysis of student grades and alcohol consumption.
-
-This script loads student data, computes an alcohol index and
-categorical level, and runs basic statistical comparisons and plots.
-Refactored for clarity, testability, and best practices.
-"""
+# Analysis of student grades and alcohol consumption.
+# This script loads student data, computes an alcohol index and categorical level, and runs basic statistical comparisons and plots.
 
 from pathlib import Path
 from typing import Tuple
@@ -76,10 +72,9 @@ def plot_binomial_probs(n: int, p: float = 0.25, figsize: Tuple[int, int] = (14,
 
 
 def compare_grades_by_acl(df: pd.DataFrame) -> dict:
-    """Compare `G3` grades between low and high alcohol consumption groups.
-
-    Returns dictionary with variance table, Bartlett and t-test results and a figure.
-    """
+    # Compare `G3` grades between low and high alcohol consumption groups.
+    # Returns dictionary with variance table, Bartlett and t-test results and a figure.
+    
     res = {}
     groups = df.groupby("acl")["G3"]
     res["variance_by_acl"] = groups.var()
@@ -98,10 +93,9 @@ def compare_grades_by_acl(df: pd.DataFrame) -> dict:
 
 
 def contingency_analysis_gender_acl(df: pd.DataFrame) -> dict:
-    """Perform chi-square contingency analysis for gender and alcohol level.
-
-    Returns observed table, expected table, chi2 results and a figure comparing observed vs expected.
-    """
+    # Perform chi-square contingency analysis for gender and alcohol level.
+    # Returns observed table, expected table, chi2 results and a figure comparing observed vs expected.
+    
     res = {}
     table = pd.crosstab(df["acl"], df["gender"])  # rows: acl, cols: gender
     res["observed"] = table
