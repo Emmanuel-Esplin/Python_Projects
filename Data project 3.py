@@ -181,7 +181,7 @@ def plot_boxplots(df: pd.DataFrame, categorical_vars: List[str], save_plots: boo
 
 
 def plot_scatter_and_joint(df: pd.DataFrame, save_plots: bool = False, save_dir: Path = Path('outputs/plots')) -> None:
-    """Scatter and joint plot for 1stFlrSF vs SalePrice if present."""
+    # Scatter and joint plot for 1stFlrSF vs SalePrice.
     if {'1stFlrSF', 'SalePrice'}.issubset(df.columns):
         fig = df.plot.scatter(x='1stFlrSF', y='SalePrice').get_figure()
         plt.title('1st Floor Area vs Sale Price')
@@ -207,7 +207,7 @@ def plot_scatter_and_joint(df: pd.DataFrame, save_plots: bool = False, save_dir:
 
 
 def plot_pairplots(df: pd.DataFrame, save_plots: bool = False, save_dir: Path = Path('outputs/plots')) -> None:
-    """Create pairplots similar to the original exploratory script."""
+    # Create pairplots.
     numeric_cols = [c for c in df.select_dtypes(include=[np.number]).columns if c != 'SalePrice']
     if len(numeric_cols) >= 4:
         pp = sns.pairplot(df[numeric_cols[:4]], plot_kws={"s": 10})
@@ -236,7 +236,7 @@ def plot_pairplots(df: pd.DataFrame, save_plots: bool = False, save_dir: Path = 
 
 
 def plot_facet_grids(df: pd.DataFrame, save_plots: bool = False, save_dir: Path = Path('outputs/plots')) -> None:
-    """Create FacetGrid conditional plots from the original script."""
+    # Create FacetGrid conditional plots.
     if {'YrSold', 'SaleCondition', 'CentralAir', 'Age', 'SalePrice'}.issubset(df.columns):
         g = sns.FacetGrid(df, col='YrSold', row='SaleCondition', hue='CentralAir')
         g.map(plt.scatter, 'Age', 'SalePrice').add_legend()
