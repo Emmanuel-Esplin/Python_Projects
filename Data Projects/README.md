@@ -172,12 +172,6 @@ Generated visualizations and analysis results are saved to the `outputs/plots/` 
 
 ---
 
-## Author
-
-Emmanuel Esplin
-
----
-
 ## License
 
 See [LICENSE](../LICENSE) for details.
