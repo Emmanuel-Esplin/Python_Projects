@@ -31,27 +31,29 @@ Performs exploratory data analysis and predictive modeling on housing market dat
 
 **Dependencies:** pandas, numpy, matplotlib, seaborn
 
-**Data Files:** `house_train.csv`
+**Data Files:** `data/house_train.csv`
 
 ---
 
 ### 3. **Gold Price Prediction** (`gold_price_prediction.py`)
-Machine learning project predicting gold prices using various regression models.
+Machine learning project predicting the gold price (GLD ETF) from the S&P 500 (SPX), oil (USO) and the EUR/USD exchange rate.
 
 **Key Features:**
 - Loads and explores gold price dataset
 - Correlation analysis with heatmap visualization
-- Feature preprocessing (removes highly correlated features)
+- Excludes SLV (silver), which tracks gold almost exactly
+- Chronological train/test split and time-series cross-validation (no look-ahead leakage)
+- Outlier clipping using limits learned from the training set only
 - Implements multiple ML models:
   - Polynomial Regression (Lasso)
   - Random Forest Regressor
   - XGBoost Regressor
-- Model evaluation using R² and RMSE metrics
 - Grid search for hyperparameter tuning
+- Model evaluation using R² and RMSE, compared against a naive "last known price" baseline
 
 **Dependencies:** pandas, numpy, matplotlib, seaborn, scikit-learn, xgboost
 
-**Data Files:** `gold_price_data.csv`
+**Data Files:** `data/gold_price_data.csv`
 
 ---
 
@@ -62,13 +64,14 @@ Statistical analysis exploring the relationship between student alcohol consumpt
 - Loads and cleans student data
 - Computes alcohol consumption index
 - Confidence interval calculations (for mean and proportions)
-- Statistical hypothesis testing
+- Bartlett test for equal variances, then Student's or Welch's t-test accordingly
+- Chi-square test of independence between gender and alcohol level
 - Categorical analysis (low/high alcohol consumption)
 - Statistical comparisons and visualization
 
 **Dependencies:** pandas, numpy, matplotlib, seaborn, scipy
 
-**Data Files:** `student.csv`
+**Data Files:** `data/student.csv`
 
 ---
 
@@ -90,7 +93,7 @@ Comprehensive demonstration of matplotlib plotting techniques and visualization 
 
 ## Data Files
 
-The `Data Projects` folder includes the following datasets:
+The `data/` folder includes the following datasets:
 - `house_train.csv` - Housing market data for analysis
 - `gold_price_data.csv` - Historical gold price data
 - `student.csv` - Student demographic and performance data
@@ -107,11 +110,12 @@ Data Projects/
 ├── gold_price_prediction.py
 ├── student_alcohol_correlation.py
 ├── matplotlib_visualization_examples.py
-├── house_train.csv
-├── gold_price_data.csv
-├── student.csv
-└── outputs/
-    └── plots/                                 (generated visualizations)
+├── data/
+│   ├── house_train.csv
+│   ├── gold_price_data.csv
+│   └── student.csv
+└── outputs/                                   (generated, git-ignored)
+    └── <script_name>/                         (plots for each script)
 ```
 
 ---
@@ -119,9 +123,9 @@ Data Projects/
 ## Getting Started
 
 ### Prerequisites
-Install required dependencies:
+Install required dependencies from the repository root:
 ```bash
-pip install pandas numpy matplotlib seaborn scikit-learn xgboost scipy requests datascience
+pip install -r requirements.txt
 ```
 
 ### Running Individual Projects
@@ -154,21 +158,9 @@ python matplotlib_visualization_examples.py
 
 ---
 
-## Features & Best Practices
-
-All projects include:
-- ✅ Proper logging and error handling
-- ✅ Type hints for better code clarity
-- ✅ Modular function design
-- ✅ Data validation and preprocessing
-- ✅ Professional visualization styling
-- ✅ Output directory management
-
----
-
 ## Output
 
-Generated visualizations and analysis results are saved to the `outputs/plots/` directory.
+Each script saves its plots to `Data Projects/outputs/<script_name>/`, except the matplotlib examples, which display their figures interactively. Data files are resolved relative to the script, so the scripts can be run from any working directory.
 
 ---
 
