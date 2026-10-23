@@ -6,9 +6,12 @@ from typing import List, Dict
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 import seaborn as sns
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+_HERE = Path(__file__).parent
+_SAVE_DIR = _HERE / 'outputs' / 'housing_market_analysis'
 sns.set_style('whitegrid')
 plt.rcParams.update({
     'figure.dpi': 140,
@@ -52,9 +55,7 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df = df.loc[:, df.columns.intersection(cols)]
 
-    # compute age and update numerical vars (without mutating original list)
     df['Age'] = df['YrSold'] - df['YearBuilt']
-    numerical_vars2 = [v for v in numerical_vars if v != 'YearBuilt'] + ['Age']
 
     # filter categorical variables by level frequency
     keep_levels: Dict[str, List] = {}
@@ -74,13 +75,14 @@ def summary_statistics(df: pd.DataFrame) -> pd.DataFrame:
     return df.describe()
 
 
-def plot_histograms(df: pd.DataFrame, numerical_vars: List[str], save_plots: bool = False, save_dir: Path = Path('outputs/plots')) -> None:
+def plot_histograms(df: pd.DataFrame, numerical_vars: List[str], save_plots: bool = False, save_dir: Path = _SAVE_DIR) -> None:
     # Plot histograms for provided numerical variables.
-    df['SalePrice'].hist(edgecolor='black', bins=20)
-    plt.title('Sale Price Distribution')
-    plt.xlabel('Sale Price')
-    plt.ylabel('Frequency')
-    fig = plt.gcf()
+    fig, ax = plt.subplots()
+    df['SalePrice'].hist(edgecolor='black', bins=20, ax=ax)
+    ax.set_title('Sale Price Distribution')
+    ax.set_xlabel('Sale Price')
+    ax.set_ylabel('Frequency')
+    ax.xaxis.set_major_formatter(mtick.FuncFormatter(lambda x, p: f'{int(x):,}'))
     if save_plots:
         save_dir.mkdir(parents=True, exist_ok=True)
         fig.savefig(save_dir / 'saleprice_distribution.png', bbox_inches='tight', dpi=150)
@@ -95,14 +97,7 @@ def plot_histograms(df: pd.DataFrame, numerical_vars: List[str], save_plots: boo
         ax.set_title(label)
         ax.set_xlabel(label)
         ax.set_ylabel('Frequency')
-        # format y axis if it looks like a price/count
-        try:
-            if 'price' in label.lower() or 'sale' in label.lower():
-                import matplotlib.ticker as mtick
-                ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda x, p: f'{int(x):,}'))
-        except Exception:
-            pass
-    fig = plt.gcf()
+    fig = flat_axes[0].figure
     plt.tight_layout()
     if save_plots:
         save_dir.mkdir(parents=True, exist_ok=True)
@@ -112,7 +107,7 @@ def plot_histograms(df: pd.DataFrame, numerical_vars: List[str], save_plots: boo
         plt.show()
 
 
-def plot_categorical_counts(df: pd.DataFrame, categorical_vars: List[str], save_plots: bool = False, save_dir: Path = Path('outputs/plots')) -> None:
+def plot_categorical_counts(df: pd.DataFrame, categorical_vars: List[str], save_plots: bool = False, save_dir: Path = _SAVE_DIR) -> None:
     fig, ax = plt.subplots(2, 4, figsize=(14, 6))
     for var, subplot in zip(categorical_vars, ax.flatten()):
         if var in df.columns:
@@ -124,18 +119,18 @@ def plot_categorical_counts(df: pd.DataFrame, categorical_vars: List[str], save_
             for label in subplot.get_xticklabels():
                 label.set_rotation(45)
                 label.set_ha('right')
-    fig = plt.gcf()
+    for subplot in ax.flatten()[len(categorical_vars):]:
+        subplot.set_visible(False)
+    fig.tight_layout()
     if save_plots:
         save_dir.mkdir(parents=True, exist_ok=True)
-        fig.tight_layout()
         fig.savefig(save_dir / 'categorical_counts.png', bbox_inches='tight', dpi=150)
         plt.close(fig)
     else:
-        fig.tight_layout()
         plt.show()
 
 
-def plot_correlations(df: pd.DataFrame, numerical_vars: List[str], save_plots: bool = False, save_dir: Path = Path('outputs/plots')) -> None:
+def plot_correlations(df: pd.DataFrame, numerical_vars: List[str], save_plots: bool = False, save_dir: Path = _SAVE_DIR) -> None:
     correlations = df[numerical_vars].corr()
     fig, ax = plt.subplots(figsize=(7, 5))
     sns.heatmap(correlations, ax=ax, annot=True, fmt='.2f', cmap='coolwarm', center=0, annot_kws={'size': 9})
@@ -151,7 +146,7 @@ def plot_correlations(df: pd.DataFrame, numerical_vars: List[str], save_plots: b
         plt.show()
 
 
-def plot_boxplots(df: pd.DataFrame, categorical_vars: List[str], save_plots: bool = False, save_dir: Path = Path('outputs/plots')) -> None:
+def plot_boxplots(df: pd.DataFrame, categorical_vars: List[str], save_plots: bool = False, save_dir: Path = _SAVE_DIR) -> None:
     # draw some representative boxplots
     fig, ax = plt.subplots(3, 3, figsize=(14, 9))
     for var, subplot in zip(categorical_vars, ax.flatten()):
@@ -165,12 +160,9 @@ def plot_boxplots(df: pd.DataFrame, categorical_vars: List[str], save_plots: boo
                 label.set_rotation(45)
                 label.set_ha('right')
             # format y axis with thousands separator for readability
-            try:
-                import matplotlib.ticker as mtick
-                subplot.yaxis.set_major_formatter(mtick.FuncFormatter(lambda x, p: f'{int(x):,}'))
-            except Exception:
-                pass
-    fig = plt.gcf()
+            subplot.yaxis.set_major_formatter(mtick.FuncFormatter(lambda x, p: f'{int(x):,}'))
+    for subplot in ax.flatten()[len(categorical_vars):]:
+        subplot.set_visible(False)
     fig.tight_layout()
     if save_plots:
         save_dir.mkdir(parents=True, exist_ok=True)
@@ -180,7 +172,7 @@ def plot_boxplots(df: pd.DataFrame, categorical_vars: List[str], save_plots: boo
         plt.show()
 
 
-def plot_scatter_and_joint(df: pd.DataFrame, save_plots: bool = False, save_dir: Path = Path('outputs/plots')) -> None:
+def plot_scatter_and_joint(df: pd.DataFrame, save_plots: bool = False, save_dir: Path = _SAVE_DIR) -> None:
     # Scatter and joint plot for 1stFlrSF vs SalePrice.
     if {'1stFlrSF', 'SalePrice'}.issubset(df.columns):
         fig = df.plot.scatter(x='1stFlrSF', y='SalePrice').get_figure()
@@ -197,26 +189,26 @@ def plot_scatter_and_joint(df: pd.DataFrame, save_plots: bool = False, save_dir:
 
         jp = sns.jointplot(x='1stFlrSF', y='SalePrice', data=df, joint_kws={"s": 10})
         jp.set_axis_labels('1st Floor Area (sq ft)', 'Sale Price')
-        jp.fig.tight_layout()
+        jp.figure.tight_layout()
         if save_plots:
             save_dir.mkdir(parents=True, exist_ok=True)
-            jp.fig.savefig(save_dir / 'joint_1stflrsf_saleprice.png', bbox_inches='tight', dpi=150)
-            plt.close(jp.fig)
+            jp.figure.savefig(save_dir / 'joint_1stflrsf_saleprice.png', bbox_inches='tight', dpi=150)
+            plt.close(jp.figure)
         else:
             plt.show()
 
 
-def plot_pairplots(df: pd.DataFrame, save_plots: bool = False, save_dir: Path = Path('outputs/plots')) -> None:
+def plot_pairplots(df: pd.DataFrame, save_plots: bool = False, save_dir: Path = _SAVE_DIR) -> None:
     # Create pairplots.
     numeric_cols = [c for c in df.select_dtypes(include=[np.number]).columns if c != 'SalePrice']
     if len(numeric_cols) >= 4:
         pp = sns.pairplot(df[numeric_cols[:4]], plot_kws={"s": 10})
-        pp.fig.suptitle('Pairplot of first numeric variables', y=1.02)
-        pp.fig.tight_layout()
+        pp.figure.suptitle('Pairplot of first numeric variables', y=1.02)
+        pp.figure.tight_layout()
         if save_plots:
             save_dir.mkdir(parents=True, exist_ok=True)
-            pp.fig.savefig(save_dir / 'pairplot_first4.png', bbox_inches='tight', dpi=150)
-            plt.close(pp.fig)
+            pp.figure.savefig(save_dir / 'pairplot_first4.png', bbox_inches='tight', dpi=150)
+            plt.close(pp.figure)
         else:
             plt.show()
 
@@ -225,26 +217,26 @@ def plot_pairplots(df: pd.DataFrame, save_plots: bool = False, save_dir: Path = 
         # ensure at least two columns for pairplot
         if len(cols) >= 2:
             pp2 = sns.pairplot(df[cols], plot_kws={"s": 10})
-            pp2.fig.suptitle('Pairplot of SalePrice with other numeric vars', y=1.02)
-            pp2.fig.tight_layout()
+            pp2.figure.suptitle('Pairplot of SalePrice with other numeric vars', y=1.02)
+            pp2.figure.tight_layout()
             if save_plots:
                 save_dir.mkdir(parents=True, exist_ok=True)
-                pp2.fig.savefig(save_dir / 'pairplot_saleprice_others.png', bbox_inches='tight', dpi=150)
-                plt.close(pp2.fig)
+                pp2.figure.savefig(save_dir / 'pairplot_saleprice_others.png', bbox_inches='tight', dpi=150)
+                plt.close(pp2.figure)
             else:
                 plt.show()
 
 
-def plot_facet_grids(df: pd.DataFrame, save_plots: bool = False, save_dir: Path = Path('outputs/plots')) -> None:
+def plot_facet_grids(df: pd.DataFrame, save_plots: bool = False, save_dir: Path = _SAVE_DIR) -> None:
     # Create FacetGrid conditional plots.
     if {'YrSold', 'SaleCondition', 'CentralAir', 'Age', 'SalePrice'}.issubset(df.columns):
         g = sns.FacetGrid(df, col='YrSold', row='SaleCondition', hue='CentralAir')
         g.map(plt.scatter, 'Age', 'SalePrice').add_legend()
         if save_plots:
             save_dir.mkdir(parents=True, exist_ok=True)
-            g.fig.tight_layout()
-            g.fig.savefig(save_dir / 'facetgrid_yrsold_salecondition.png', bbox_inches='tight', dpi=150)
-            plt.close(g.fig)
+            g.figure.tight_layout()
+            g.figure.savefig(save_dir / 'facetgrid_yrsold_salecondition.png', bbox_inches='tight', dpi=150)
+            plt.close(g.figure)
         else:
             plt.show()
 
@@ -253,40 +245,28 @@ def plot_facet_grids(df: pd.DataFrame, save_plots: bool = False, save_dir: Path 
         g.map(plt.scatter, 'OverallQual', 'SalePrice')
         if save_plots:
             save_dir.mkdir(parents=True, exist_ok=True)
-            g.fig.tight_layout()
-            g.fig.savefig(save_dir / 'facetgrid_neighborhood_overallqual.png', bbox_inches='tight', dpi=150)
-            plt.close(g.fig)
-        else:
-            plt.show()
-
-    # repeat of conditional grid from original script (kept for completeness)
-    if {'YrSold', 'SaleCondition', 'CentralAir', 'Age', 'SalePrice'}.issubset(df.columns):
-        g2 = sns.FacetGrid(df, col='YrSold', row='SaleCondition', hue='CentralAir')
-        g2.map(plt.scatter, 'Age', 'SalePrice').add_legend()
-        if save_plots:
-            save_dir.mkdir(parents=True, exist_ok=True)
-            g2.fig.tight_layout()
-            g2.fig.savefig(save_dir / 'facetgrid_yrsold_salecondition_2.png', bbox_inches='tight', dpi=150)
-            plt.close(g2.fig)
+            g.figure.tight_layout()
+            g.figure.savefig(save_dir / 'facetgrid_neighborhood_overallqual.png', bbox_inches='tight', dpi=150)
+            plt.close(g.figure)
         else:
             plt.show()
 
 
-def main(data_path: str = 'house_train.csv') -> None:
+def main(data_path: Path = _HERE / 'data' / 'house_train.csv') -> None:
     # Run the light EDA pipeline and produce plots.
-    data = load_data(Path(data_path))
+    data = load_data(data_path)
     df = preprocess(data)
 
-    # choose variables for plotting from processed df
-    numerical_vars = [c for c in df.select_dtypes(include=[np.number]).columns if c != 'SalePrice']
+    # YearBuilt is replaced by Age; MoSold/YrSold are treated as categorical levels
+    numerical_vars = ['LotArea', 'OverallQual', 'OverallCond', '1stFlrSF', '2ndFlrSF', 'BedroomAbvGr', 'Age']
     categorical_vars = [c for c in df.select_dtypes(include=['object', 'category']).columns]
 
-    _ = summary_statistics(df)
-    # Save plots to outputs/plots by default so they are available when running non-interactively.
-    save_dir = Path('outputs/plots')
-    plot_histograms(df, ['LotArea', 'OverallQual', 'OverallCond', '1stFlrSF', '2ndFlrSF', 'BedroomAbvGr', 'Age'], save_plots=True, save_dir=save_dir)
+    print(summary_statistics(df))
+    # Save plots by default so they are available when running non-interactively.
+    save_dir = _SAVE_DIR
+    plot_histograms(df, numerical_vars, save_plots=True, save_dir=save_dir)
     plot_categorical_counts(df, categorical_vars[:8], save_plots=True, save_dir=save_dir)
-    plot_correlations(df, ['SalePrice'] + numerical_vars[:7], save_plots=True, save_dir=save_dir)
+    plot_correlations(df, ['SalePrice'] + numerical_vars, save_plots=True, save_dir=save_dir)
     plot_boxplots(df, categorical_vars[:8], save_plots=True, save_dir=save_dir)
 
     # restored exploratory plots

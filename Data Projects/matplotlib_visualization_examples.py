@@ -1,13 +1,19 @@
-
+# Matplotlib plotting examples, runnable individually or all at once from the command line.
 from __future__ import annotations
 
 import argparse
-from typing import Iterable, Sequence
+from typing import Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-def simple_line_plots(show: bool = True) -> None:
+# Top 10 countries at the Rio 2016 Olympics
+COUNTRIES = ['USA', 'GBR', 'CHN', 'RUS', 'GER', 'JPN', 'FRA', 'KOR', 'ITA', 'AUS']
+GOLD = [46, 27, 26, 19, 17, 12, 10, 9, 8, 8]
+SILVER = [37, 23, 18, 18, 10, 8, 18, 3, 12, 11]
+
+
+def simple_line_plots(show: bool = True) -> plt.Figure:
     # Create a few simple line and scatter plots.
     x = [1, 2, 3, 4]
     plt.figure()
@@ -25,7 +31,7 @@ def simple_line_plots(show: bool = True) -> None:
     return plt.gcf()
 
 
-def damped_cosine_example(show: bool = True) -> None:
+def damped_cosine_example(show: bool = True) -> plt.Figure:
     # Plot a damped cosine with two different time resolutions.
     def f(t: np.ndarray) -> np.ndarray:
         return np.exp(-t) * np.cos(2 * np.pi * t)
@@ -35,8 +41,10 @@ def damped_cosine_example(show: bool = True) -> None:
 
     plt.figure()
     plt.subplot(2, 1, 1)
-    plt.plot(t1, f(t1), 'bo')
-    plt.title('Damped cosine (coarse)')
+    plt.plot(t1, f(t1), 'bo', label='coarse samples')
+    plt.plot(t2, f(t2), 'k', label='fine curve')
+    plt.title('Damped cosine')
+    plt.legend()
 
     plt.subplot(2, 1, 2)
     plt.plot(t2, np.cos(2 * np.pi * t2), 'r--')
@@ -47,7 +55,7 @@ def damped_cosine_example(show: bool = True) -> None:
     return plt.gcf()
 
 
-def polynomial_subplots(show: bool = True) -> None:
+def polynomial_subplots(show: bool = True) -> plt.Figure:
     # Show several polynomial powers on multiple subplots.
     x = np.linspace(-5, 5, 150)
     fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(8, 6))
@@ -65,7 +73,7 @@ def polynomial_subplots(show: bool = True) -> None:
     return fig
 
 
-def sine_cosine_examples(show: bool = True) -> None:
+def sine_cosine_examples(show: bool = True) -> plt.Figure:
     # Plot sine and cosine with custom ticks, annotations and legend.
     x = np.linspace(-np.pi, np.pi, 200)
     sine, cosine = np.sin(x), np.cos(x)
@@ -91,22 +99,19 @@ def sine_cosine_examples(show: bool = True) -> None:
     return fig
 
 
-def olympics_bar_chart(show: bool = True) -> None:
-    #Top 10 Rio Olympics medals bar chart (gold and silver).
-    countries = ['USA', 'GBR', 'CHN', 'RUS', 'GER', 'JPN', 'FRA', 'KOR', 'ITA', 'AUS']
-    gold = [46, 27, 26, 19, 17, 12, 10, 9, 8, 8]
-    silver = [37, 23, 18, 18, 10, 8, 18, 3, 12, 11]
-
-    ind = np.arange(len(countries))
+def olympics_bar_chart(show: bool = True) -> plt.Figure:
+    # Top 10 Rio Olympics medals bar chart (gold and silver).
+    ind = np.arange(len(COUNTRIES))
     width = 0.4
     fig, ax = plt.subplots(figsize=(10, 5.5))
-    ax.bar(ind, gold, color="#FFDF00", width=width, label='Gold')
-    ax.bar(ind + width, silver, color="#C0C0C0", width=width, label='Silver')
+    ax.bar(ind, GOLD, color="#FFDF00", width=width, label='Gold')
+    ax.bar(ind + width, SILVER, color="#C0C0C0", width=width, label='Silver')
     ax.set_xticks(ind + width / 2)
-    ax.set_xticklabels(countries)
-    for x_pos, g, s in zip(ind, gold, silver):
-        ax.text(x_pos - 0.05, g + 0.5, str(g), ha='center')
-        ax.text(x_pos + width - 0.05, s + 0.5, str(s), ha='center')
+    ax.set_xticklabels(COUNTRIES)
+    # Bars are centred on their x position, so labels use the same x with ha='center'
+    for x_pos, g, s in zip(ind, GOLD, SILVER):
+        ax.text(x_pos, g + 0.5, str(g), ha='center')
+        ax.text(x_pos + width, s + 0.5, str(s), ha='center')
     ax.set_title('Gold and Silver Medals at Rio', size=16)
     ax.set_xlabel('Country', size=14)
     ax.set_ylabel('Number of medals', size=14)
@@ -117,23 +122,20 @@ def olympics_bar_chart(show: bool = True) -> None:
     return fig
 
 
-def histogram_and_scatter(show: bool = True, seed: int = 0) -> None:
+def histogram_and_scatter(show: bool = True, seed: int = 0) -> tuple[plt.Figure, plt.Figure]:
     # Create a histogram example and a scatter plot.
     rng = np.random.default_rng(seed)
     iqs = rng.normal(loc=100, scale=10, size=300)
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 4))
     axes[0].hist(iqs, bins=18, edgecolor='k')
     axes[0].set_title('Frequency histogram')
-    axes[1].hist(iqs, bins=18, color='red', edgecolor='k')
+    axes[1].hist(iqs, bins=18, density=True, color='red', edgecolor='k')
     axes[1].set_title('Density histogram')
     fig.tight_layout()
 
     # Scatter: reuse olympics data for demonstration
-    countries = ['USA', 'GBR', 'CHN', 'RUS', 'GER', 'JPN', 'FRA', 'KOR', 'ITA', 'AUS']
-    gold = [46, 27, 26, 19, 17, 12, 10, 9, 8, 8]
-    silver = [37, 23, 18, 18, 10, 8, 18, 3, 12, 11]
     fig2, ax2 = plt.subplots()
-    ax2.scatter(gold, silver, marker='o')
+    ax2.scatter(GOLD, SILVER, marker='o')
     ax2.set_title('Gold vs. Silver at Rio Olympics', size=16)
     ax2.set_xlabel('Gold medals', size=14)
     ax2.set_ylabel('Silver medals', size=14)

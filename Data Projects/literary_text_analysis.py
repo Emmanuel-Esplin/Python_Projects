@@ -13,8 +13,7 @@ from datascience import Table
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 _HERE = Path(__file__).parent
-_OUTPUT_DIR = _HERE / "outputs"
-_OUTPUT_DIR.mkdir(exist_ok=True)
+_OUTPUT_DIR = _HERE / "outputs" / "literary_text_analysis"
 
 
 def read_url(url: str, timeout: float = 10.0) -> str:
@@ -87,9 +86,11 @@ def save_scatter_lengths_periods(tbl1: Table, tbl2: Table, filename: str) -> Non
 
 
 def main() -> None:
+    _OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
     # Sources
-    huck_finn_url = "https://www.inferentialthinking.com/data/huck_finn.txt"
-    little_women_url = "https://www.inferentialthinking.com/data/little_women.txt"
+    huck_finn_url = "https://inferentialthinking.com/data/huck_finn.txt"
+    little_women_url = "https://inferentialthinking.com/data/little_women.txt"
 
     try:
         huck_text = read_url(huck_finn_url)

@@ -1,6 +1,8 @@
 # Analysis of student grades and alcohol consumption.
 # This script loads student data, computes an alcohol index and categorical level, and runs basic statistical comparisons and plots.
 
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Tuple
 
@@ -13,6 +15,9 @@ from scipy import stats
 # Visualization defaults
 sns.set_theme(style="whitegrid")
 
+_HERE = Path(__file__).parent
+_OUTPUT_DIR = _HERE / "outputs" / "student_alcohol_correlation"
+
 
 def load_student_data(path: Path) -> pd.DataFrame:
     """Load student data from CSV and perform initial cleaning.
@@ -23,10 +28,7 @@ def load_student_data(path: Path) -> pd.DataFrame:
     Returns:
         A cleaned DataFrame with `gender` column and alcohol index.
     """
-    try:
-        df = pd.read_csv(path, sep=";")
-    except FileNotFoundError:
-        raise
+    df = pd.read_csv(path, sep=";")
 
     # Standardize column names and compute alcohol index
     df = df.rename(columns={"sex": "gender"})
@@ -36,14 +38,14 @@ def load_student_data(path: Path) -> pd.DataFrame:
 
 
 def confidence_interval_mean(series: pd.Series, confidence: float = 0.95) -> Tuple[float, float]:
-    """Compute a normal-theory confidence interval for the mean.
+    """Compute a t-distribution confidence interval for the mean.
 
     Uses sample standard deviation divided by sqrt(n).
     """
     n = len(series)
     mean = series.mean()
     se = series.std(ddof=1) / np.sqrt(n)
-    return stats.norm.interval(confidence, loc=mean, scale=se)
+    return stats.t.interval(confidence, df=n - 1, loc=mean, scale=se)
 
 
 def confidence_interval_prop(p: float, n: int, confidence: float = 0.98) -> Tuple[float, float]:
@@ -82,7 +84,9 @@ def compare_grades_by_acl(df: pd.DataFrame) -> dict:
     low = df.loc[df["acl"] == "Low", "G3"]
     high = df.loc[df["acl"] == "High", "G3"]
     res["bartlett"] = stats.bartlett(low, high)
-    res["ttest"] = stats.ttest_ind(low, high, equal_var=True)
+    # Fall back to Welch's t-test when Bartlett rejects equal variances
+    res["equal_var"] = res["bartlett"].pvalue >= 0.05
+    res["ttest"] = stats.ttest_ind(low, high, equal_var=res["equal_var"])
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 4))
     sns.boxplot(x="acl", y="G3", data=df, ax=axes[0])
@@ -94,7 +98,7 @@ def compare_grades_by_acl(df: pd.DataFrame) -> dict:
 
 def contingency_analysis_gender_acl(df: pd.DataFrame) -> dict:
     # Perform chi-square contingency analysis for gender and alcohol level.
-    # Returns observed table, expected table, chi2 results and a figure comparing observed vs expected.
+    # Returns observed table, expected table, chi2 results and a figure of observed counts and percentages.
     
     res = {}
     table = pd.crosstab(df["acl"], df["gender"])  # rows: acl, cols: gender
@@ -115,14 +119,10 @@ def contingency_analysis_gender_acl(df: pd.DataFrame) -> dict:
 def main(data_path: Path | None = None) -> None:
     """Main entrypoint for script execution.
 
-    If `data_path` is None, attempts to load `student.csv` from the script directory.
+    If `data_path` is None, attempts to load `data/student.csv` next to the script.
     """
     if data_path is None:
-        try:
-            base = Path(__file__).parent
-        except NameError:
-            base = Path.cwd()
-        data_path = base / "student.csv"
+        data_path = _HERE / "data" / "student.csv"
 
     df = load_student_data(data_path)
 
@@ -136,15 +136,28 @@ def main(data_path: Path | None = None) -> None:
     prop_ci = confidence_interval_prop(prop_high, n, confidence=0.98)
     print(f"Proportion High ACL: {prop_high:.3f}, 98% CI: {prop_ci}")
 
-    # Show binomial example figure (not displayed automatically in non-interactive runs)
-    fig_binom = plot_binomial_probs(10)
-    fig_binom.savefig("binomial_example.png")
-
     grade_res = compare_grades_by_acl(df)
-    grade_res["figure"].savefig("grades_by_acl.png")
+    print(f"G3 variance by ACL:\n{grade_res['variance_by_acl']}")
+    print(f"Bartlett test: stat={grade_res['bartlett'].statistic:.3f}, p={grade_res['bartlett'].pvalue:.4f}")
+    test_name = "Student's" if grade_res["equal_var"] else "Welch's"
+    print(f"{test_name} t-test: t={grade_res['ttest'].statistic:.3f}, p={grade_res['ttest'].pvalue:.4f}")
 
     cont_res = contingency_analysis_gender_acl(df)
-    cont_res["figure"].savefig("gender_acl_contingency.png")
+    chi2_stat, p_value, dof = cont_res["chi2"]
+    print(f"Observed ACL x gender:\n{cont_res['observed']}")
+    print(f"Expected ACL x gender:\n{cont_res['expected'].round(1)}")
+    print(f"Chi-square test: chi2={chi2_stat:.3f}, dof={dof}, p={p_value:.4f}")
+
+    _OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    figures = {
+        "binomial_example.png": plot_binomial_probs(10),
+        "grades_by_acl.png": grade_res["figure"],
+        "gender_acl_contingency.png": cont_res["figure"],
+    }
+    for filename, fig in figures.items():
+        fig.savefig(_OUTPUT_DIR / filename, bbox_inches="tight", dpi=150)
+        plt.close(fig)
+    print(f"Saved plots to {_OUTPUT_DIR}")
 
 
 if __name__ == "__main__":
