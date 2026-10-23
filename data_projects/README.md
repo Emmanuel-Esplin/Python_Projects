@@ -103,7 +103,7 @@ The `data/` folder includes the following datasets:
 ## Directory Structure
 
 ```
-Data Projects/
+data_projects/
 ├── README.md                                  (this file)
 ├── literary_text_analysis.py
 ├── housing_market_analysis.py
@@ -160,7 +160,7 @@ python matplotlib_visualization_examples.py
 
 ## Output
 
-Each script saves its plots to `Data Projects/outputs/<script_name>/`, except the matplotlib examples, which display their figures interactively. Data files are resolved relative to the script, so the scripts can be run from any working directory.
+Each script saves its plots to `data_projects/outputs/<script_name>/`, except the matplotlib examples, which display their figures interactively. Data files are resolved relative to the script, so the scripts can be run from any working directory.
 
 ---
 

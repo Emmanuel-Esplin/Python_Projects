@@ -4,7 +4,7 @@
 This repository contains **personal and learning projects** focused on Python programming, data science, and automation. These projects are based on research from textbooks, online resources, and practical experimentation.
 
 ## Contents
-- [`Data Projects/`](Data%20Projects/README.md) — data analysis, statistics, and machine learning scripts
+- [`data_projects/`](data_projects/README.md) — data analysis, statistics, and machine learning scripts
 - `payment_receipt.py` — generates a PDF payment receipt with ReportLab
 
 ## Technologies
@@ -29,7 +29,7 @@ To practice Python concepts and apply them to real-world scenarios, reinforcing 
    ```
 3. Run any script directly, for example:
    ```bash
-   python "Data Projects/housing_market_analysis.py"
+   python data_projects/housing_market_analysis.py
    python payment_receipt.py
    ```
 
