@@ -205,3 +205,12 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# macOS
+.DS_Store
+
+# R session history
+.Rhistory
+
+# Generated plots and reports (re-created by running the scripts)
+outputs/
