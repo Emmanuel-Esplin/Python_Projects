@@ -20,7 +20,7 @@ Analyzes literary texts (e.g., book chapters) to extract insights about characte
 ---
 
 ### 2. **Housing Market Analysis** (`housing_market_analysis.py`)
-Performs exploratory data analysis and predictive modeling on housing market data.
+Performs exploratory data analysis on housing market data.
 
 **Key Features:**
 - Data loading and preprocessing
