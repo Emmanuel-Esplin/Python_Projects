@@ -36,4 +36,4 @@ To practice Python concepts and apply them to real-world scenarios, reinforcing 
 Scripts locate their data files relative to their own location, so they can be run from any directory. Generated plots and PDFs are written to an `outputs/` folder next to each script (ignored by git).
 
 ## GitHub Profile
-For more projects: https://github.com/Emmanuel-Esplin/Python_Projects
+For more projects: https://github.com/Emmanuel-Esplin
